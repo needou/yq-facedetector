@@ -1,9 +1,7 @@
 // src/index.js
 import YqVideo from '@/lib/yq-video';
-import Demo from "@/lib/demo";
 
-// 将引入的组件模块存储，方便循环注册所有组件
-const components = [YqVideo,Demo];
+const components = [YqVideo];
 
 const install = (Vue,options) => {
     if (install.installed) return;
