@@ -1,8 +1,8 @@
 {
   "name": "yq-facedetector",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": false,
-  "main": "dist/index.umd.js",
+  "main": "dist/YqFacedetectorLib.umd.js",
   "scripts": {
     "dev": "vue-cli-service serve",
     "start": "vue-cli-service build --target lib --name YqFacedetectorLib --dest dist src/lib/index.js --watch",
