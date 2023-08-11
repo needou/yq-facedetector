@@ -60,6 +60,7 @@ export default {
     this.connectWebSocket();
   },
   methods: {
+    //初始化video
     initVideo(){
       const videoElement = this.$refs.videoElement;
       // 检查浏览器是否支持媒体设备API
@@ -218,6 +219,7 @@ export default {
     },
 
     stop(){
+
       this.clearAnnotation();
       window.clearInterval(window.FACE_FIND_TIMER)
       window.clearInterval(window.FACE_COMPAR_TIMER)
@@ -258,12 +260,19 @@ export default {
     refreshDb(){
       this.loading = true;
       this.sendMessage({},'buildRecognizer');
+    },
+    //释放
+    dispose(){
+      if(this.socket){
+        this.socket.close()
+      }
+      window.clearTimeout(window.FACE_CONNECT_TIMER);
+      window.clearInterval(window.FACE_FIND_TIMER);
+      window.clearInterval(window.FACE_COMPAR_TIMER);
     }
   },
   destroyed() {
-    window.clearTimeout(window.FACE_CONNECT_TIMER);
-    window.clearInterval(window.FACE_FIND_TIMER);
-    window.clearInterval(window.FACE_COMPAR_TIMER);
+    this.dispose();
   }
 };
 </script>

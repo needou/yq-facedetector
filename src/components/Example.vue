@@ -5,8 +5,8 @@
       <button @click="stop">停止</button>
       <button @click="reload">重载</button>
     </div>
-    <div style="width:320px;height: 240px;transform: scale(2); ">
-      <yq-video ref="yqVideo" :width="320" :height="240"
+    <div style="width:640px;height: 480px;transform: scale(1); ">
+      <yq-video ref="yqVideo" :width="640" :height="480"
                 @comparison="handleCheck"
                 @error="handleVideoError"/>
     </div>
