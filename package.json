@@ -1,6 +1,6 @@
 {
   "name": "yq-facedetector",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "private": false,
   "main": "dist/YqFacedetectorLib.umd.js",
   "scripts": {
