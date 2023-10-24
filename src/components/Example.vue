@@ -1,14 +1,23 @@
 <template>
   <div class="box">
     <div style="position: absolute;z-index: 200;left: 0;right: 0">
-      <button @click="start">启动</button>
+      <select v-model="device">
+        <option :value="device.id" v-for="device in deviceList">{{device.label}}</option>
+      </select>
+      <button @click="open">打开</button>
+      <button @click="capture">拍照</button>
+      <button @click="start">开始</button>
       <button @click="stop">停止</button>
       <button @click="reload">重载</button>
     </div>
     <div style="width:640px;height: 480px;transform: scale(1); ">
-      <yq-video ref="yqVideo" :width="640" :height="480"
-                @comparison="handleCheck"
-                @error="handleVideoError"/>
+      <yq-video
+          ref="yqVideo"
+          :width="640"
+          :height="480"
+          @comparison="handleCheck"
+          @error="handleVideoError"
+      />
     </div>
 
     <div class="result" v-if="detector && detector.length>0">
@@ -25,6 +34,9 @@
         </span>
       </div>
     </div>
+    <div style="position: absolute;z-index: 1000;right: -300px;top: 0">
+      <img :src="img" style="width: 300px" height="300px" />
+    </div>
   </div>
 </template>
 
@@ -39,12 +51,25 @@ export default {
   components: [],
   data(){
     return {
+      device:'',
+      deviceList:[],
       detector:[],
+      img:null,
       anti:{},
       isRun:false
     }
   },
+  mounted() {
+    this.handleDeviceList()
+  },
   methods:{
+    open(){
+      this.$refs.yqVideo.openDevice(this.device)
+    },
+    capture(){
+      const data =  this.$refs.yqVideo.capturePicture()
+      this.img = data
+    },
     start(){
       this.isRun=true
       this.$refs.yqVideo.start()
@@ -74,6 +99,30 @@ export default {
     },
     handleVideoError(code,err){
       console.log('错误信息',code,err)
+    },
+    handleDeviceList(){
+
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        //获取摄像头列表
+        navigator.mediaDevices.enumerateDevices()
+            .then((devices)=> {
+              console.log(devices)
+              let videoArr=[]
+              devices.forEach((device)=> {
+                if(device.kind == 'videoinput'){
+                  videoArr.push({
+                    'label': device.label,
+                    'id': device.deviceId
+                  })
+                }
+              })
+              this.deviceList = videoArr
+            })
+            .catch((err)=> {
+
+            })
+
+      }
     }
 
   }
@@ -86,7 +135,7 @@ export default {
   position: relative;
   width: 640px;
   height: 480px;
-  overflow: hidden;
+  /*overflow: hidden;*/
 }
 .result{
   position: absolute;

@@ -1,19 +1,24 @@
 <!-- CameraCapture.vue -->
 <template>
-  <div :style="{width:width+'px',height:height+'px'}" style="position: relative;overflow: hidden;transform: scale(1);">
+  <div :style="{width:width+'px',height:height+'px'}" style="position: relative;overflow: hidden;transform: scale(1);background-color:#d0d0d0;">
+    <!--video-->
     <video
         ref="videoElement"
         :width="width"
         :height="height"
         autoplay
         @play="play"
-    ></video>
-    <canvas ref="canvasElement"
-            :style="{width:width+'px',height:height+'px'}"
-            style="position: absolute;left: 0;top: 0;z-index:100;"></canvas>
-    <div style="position: absolute;z-index:200;left: 0;bottom: 0;">
+    >
 
-    </div>
+    </video>
+    <!--mask-->
+    <canvas
+        ref="canvasElement"
+        :style="{width:width+'px',height:height+'px'}"
+        style="position: absolute;left: 0;top: 0;z-index:100;"
+    >
+
+    </canvas>
 
     <div v-if="loading" class="loading">
 
@@ -23,6 +28,7 @@
 </template>
 
 <script>
+
 export default {
   name:'yq-video',
   props: {
@@ -41,10 +47,19 @@ export default {
     detectorScore:{
       type: Number,
       default: 0.6
+    },
+    autoStart:{
+      type: Boolean,
+      default: false
+    },
+    deviceId:{
+      type: String,
+      default: ''
     }
   },
   data() {
     return {
+      deviceList:[],
       loading:false,
       isRun: false,//是否运行
       socket: null,
@@ -56,56 +71,90 @@ export default {
     };
   },
   mounted() {
-    this.initVideo();
-    this.connectWebSocket();
+    if(this.autoStart){
+      //打开摄像头
+      this.openDevice(this.deviceId)
+      //开始识别
+      this.start()
+    }
+    this.connectWebSocket()
   },
   methods: {
-    //初始化video
+    /**
+     * 获取video列表
+     */
     initVideo(){
-      const videoElement = this.$refs.videoElement;
       // 检查浏览器是否支持媒体设备API
       if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        // 请求访问摄像头和音频
-        navigator.mediaDevices.getUserMedia({ video: true, audio: false }).then(stream => {
-          // 将摄像头视频流绑定到视频元素
-          videoElement.srcObject = stream;
-        }).catch(error => {
+        //获取摄像头列表
+        navigator.mediaDevices.enumerateDevices()
+            .then((devices)=> {
+              console.log(devices)
+              let videoArr=[]
+              devices.forEach((device)=> {
+                if(device.kind == 'videoinput'){
+                  videoArr.push({
+                    'label': device.label,
+                    'id': device.deviceId
+                  })
+                }
+              })
+              this.deviceList = videoArr
+            })
+            .catch((err)=> {
+              console.log(err)
+            })
 
-          this.$emit('error',error)
-          console.error('Error accessing camera:', error);
-        });
       }
     },
-    //websocket
+    /**
+     * 打开摄像头
+     * @param deviceId
+     */
+    openDevice(deviceId){
+      const videoElement = this.$refs.videoElement
+      // 请求访问摄像头和音频
+      navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: deviceId } }, audio: false }).then(stream => {
+        // 将摄像头视频流绑定到视频元素
+        videoElement.srcObject = stream
+      }).catch(error => {
+
+        this.$emit('error',error)
+        console.error('Error accessing camera:', error)
+      })
+    },
+    /**
+     * websocket
+     */
     connectWebSocket() {
-      this.socket = new WebSocket(this.host);
+      this.socket = new WebSocket(this.host)
 
       this.socket.onopen = () => {
-        console.log('WebSocket connection established.');
-        this.connected = true;
-      };
+        console.log('WebSocket connection established.')
+        this.connected = true
+      }
 
       this.socket.onmessage = (event) => {
-        //console.log('Received message:', event.data);
-        const msg =JSON.parse(event.data);
+        //console.log('Received message:', event.data)
+        const msg =JSON.parse(event.data)
         if(msg.func=='faceFind'){
-          let faceTmp = [];
+          let faceTmp = []
           if(msg.code==0){
             if(msg.data && msg.data.face){
               faceTmp =  msg.data.face
               if(faceTmp && faceTmp.length>0){
                 //是否找到人脸
-                this.findFace = true;
+                this.findFace = true
               }else{
-                this.findFace = false;
+                this.findFace = false
               }
             }
           }else{
             //返回错误
             this.$emit('error',msg.code,msg.message)
           }
-          this.face = faceTmp;
-          this.isCapture = false;
+          this.face = faceTmp
+          this.isCapture = false
         }
         if(msg.func=='featureComparison'){
           if(msg.code==0){
@@ -118,58 +167,70 @@ export default {
             //返回错误
             this.$emit('error',msg.code,msg.message)
           }
-          this.isCheck = false;
+          this.isCheck = false
         }
         if(msg.func=='buildRecognizer'){
-          this.loading = false;
+          this.loading = false
           if(msg.code!=0){
             //返回错误
             this.$emit('error',msg.code,msg.message)
           }
         }
-      };
+      }
 
       this.socket.onclose = () => {
-        console.log('WebSocket connection closed. Reconnecting...');
-        this.connected = false;
+        console.log('WebSocket connection closed. Reconnecting...')
+        this.connected = false
         window.FACE_CONNECT_TIMER = setTimeout(() => {
-          this.connectWebSocket(); // 自动重连
-        }, 1000);
-      };
+          this.connectWebSocket() // 自动重连
+        }, 1000)
+      }
     },
-    //发送消息
+    /**
+     * 发送消息
+     * @param msg
+     * @param func
+     */
     sendMessage(msg,func) {
       if (this.connected) {
         msg.func = func
-        this.socket.send(JSON.stringify(msg));
+        this.socket.send(JSON.stringify(msg))
       } else {
-        console.log('WebSocket not connected.');
+        console.log('WebSocket not connected.')
       }
     },
+    /**
+     * 开始运行识别
+     */
     startAnnotation() {
-      this.isRun = true;
+      this.isRun = true
     },
+    /**
+     * 清除识别
+     */
     clearAnnotation() {
-      this.isRun = false;
-      const canvasElement = this.$refs.canvasElement;
-      const canvas = canvasElement.getContext('2d');
-      canvas.clearRect(0, 0, canvasElement.width, canvasElement.height);
+      this.isRun = false
+      const canvasElement = this.$refs.canvasElement
+      const canvas = canvasElement.getContext('2d')
+      canvas.clearRect(0, 0, canvasElement.width, canvasElement.height)
     },
-    // 绘制视频帧
+    /**
+     * 绘制视频帧
+     */
     drawFrame(){
-      const videoElement = this.$refs.videoElement;
-      const canvasElement = this.$refs.canvasElement;
+      const videoElement = this.$refs.videoElement
+      const canvasElement = this.$refs.canvasElement
 
       if (videoElement.paused || videoElement.ended) {
-        return;
+        return
       }
-      const canvas = canvasElement.getContext('2d');
-      canvasElement.width = this.width;
-      canvasElement.height = this.height;
+      const canvas = canvasElement.getContext('2d')
+      canvasElement.width = this.width
+      canvasElement.height = this.height
       // 清除画布
-      canvas.clearRect(0, 0, canvasElement.width, canvasElement.height);
+      canvas.clearRect(0, 0, canvasElement.width, canvasElement.height)
       // 绘制视频帧
-      canvas.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
+      canvas.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height)
       // 在标注状态下绘制标注
       if (this.isRun) {
         //console.log('ok==========',this.face)
@@ -177,68 +238,78 @@ export default {
         if(this.face && this.face.length>0){
 
           for (let i = 0; i < this.face.length; i++) {
-            let faceItem = this.face[i];
+            let faceItem = this.face[i]
             // 绘制矩形
-            canvas.fillStyle = "rgba(0, 0, 0, 0)";
-            canvas.strokeStyle = 'red';
-            canvas.lineWidth = 2;
-            canvas.strokeRect(faceItem.x, faceItem.y, faceItem.width, faceItem.height);
+            canvas.fillStyle = "rgba(0, 0, 0, 0)"
+            canvas.strokeStyle = 'red'
+            canvas.lineWidth = 2
+            canvas.strokeRect(faceItem.x, faceItem.y, faceItem.width, faceItem.height)
           }
         }else{
-          canvas.clearRect(0, 0, canvasElement.width, canvasElement.height);
+          canvas.clearRect(0, 0, canvasElement.width, canvasElement.height)
         }
-        // canvas.font = '24px Arial';
-        // canvas.fillStyle = 'red';
-        // canvas.fillText('邓小华', 50, 50);
+        // canvas.font = '24px Arial'
+        // canvas.fillStyle = 'red'
+        // canvas.fillText('邓小华', 50, 50)
       }
       // 递归调用绘制下一帧
-      requestAnimationFrame(this.drawFrame);
+      requestAnimationFrame(this.drawFrame)
     },
-    //播放回调
+    /**
+     * 播放回调
+     */
     play(){
       this.drawFrame()
     },
+    /**
+     * 启动
+     */
     start(){
-      this.startAnnotation();
-      //this.capture(1);
+      this.startAnnotation()
+      //this.capture(1)
       //人脸查找定时器
       window.FACE_FIND_TIMER =  setInterval(()=>{
         if(!this.isCapture) {
-          this.capture();
-          this.isCapture = true;
+          this.capture()
+          this.isCapture = true
         }
       },10)
       //人脸识别定时器
       window.FACE_COMPAR_TIMER =  setInterval(()=>{
         if(this.findFace && !this.isCheck) {
-          this.capture(1);
+          this.capture(1)
           this.isCheck = true
         }
       },1000)
 
     },
-
+    /**
+     * 停止
+     */
     stop(){
 
-      this.clearAnnotation();
+      this.clearAnnotation()
       window.clearInterval(window.FACE_FIND_TIMER)
       window.clearInterval(window.FACE_COMPAR_TIMER)
     },
-    //抓取帧
+    /**
+     * 抓取帧
+     * @param type
+     */
     capture(type){
-      const videoElement = this.$refs.videoElement;
-      const canvas = document.createElement('canvas');
-      const context = canvas.getContext('2d');
+      const videoElement = this.$refs.videoElement
+      const canvas = document.createElement('canvas')
+      const context = canvas.getContext('2d')
 
       // 设置canvas的宽高与视频元素相同
-      canvas.width = this.width;
-      canvas.height = this.height;
+      canvas.width = this.width
+      canvas.height = this.height
       //console.log(canvas.width,canvas.height)
       // 在canvas上绘制当前视频帧
-      context.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+      context.drawImage(videoElement, 0, 0, canvas.width, canvas.height)
 
       // 获取图像二进制数据
-      const imageData = canvas.toDataURL('image/jpeg',0.8).split(',')[1];
+      const imageData = canvas.toDataURL('image/jpeg',0.8).split(',')[1]
 
       if(type==1){
         let params = {
@@ -246,36 +317,62 @@ export default {
           enableAnti:true, //是否活体检测
           detectorScore:this.detectorScore //特征值筛选
         }
-        this.sendMessage(params,'featureComparison');
+        this.sendMessage(params,'featureComparison')
       }
       else{
         let params = {
           imageData:imageData
         }
-        this.sendMessage(params,'faceFind');
+        this.sendMessage(params,'faceFind')
       }
 
     },
-    //刷新特征库
-    refreshDb(){
-      this.loading = true;
-      this.sendMessage({},'buildRecognizer');
+    /**
+     * 抓取图像
+     */
+    capturePicture(){
+      const videoElement = this.$refs.videoElement
+      const canvas = document.createElement('canvas')
+      const context = canvas.getContext('2d')
+
+      // 设置canvas的宽高与视频元素相同
+      canvas.width = this.width
+      canvas.height = this.height
+      //console.log(canvas.width,canvas.height)
+      // 在canvas上绘制当前视频帧
+      context.drawImage(videoElement, 0, 0, canvas.width, canvas.height)
+
+      // 获取图像二进制数据
+      const imageData = canvas.toDataURL('image/jpeg',0.8)
+
+      return imageData
     },
-    //释放
+    /**
+     * 刷新特征库
+     */
+    refreshDb(){
+      this.loading = true
+      this.sendMessage({},'buildRecognizer')
+    },
+    /**
+     * 释放
+     */
     dispose(){
       if(this.socket){
         this.socket.close()
       }
-      window.clearTimeout(window.FACE_CONNECT_TIMER);
-      window.clearInterval(window.FACE_FIND_TIMER);
-      window.clearInterval(window.FACE_COMPAR_TIMER);
+      window.clearTimeout(window.FACE_CONNECT_TIMER)
+      window.clearInterval(window.FACE_FIND_TIMER)
+      window.clearInterval(window.FACE_COMPAR_TIMER)
     }
   },
   destroyed() {
-    this.dispose();
+    this.dispose()
   }
-};
+}
+
 </script>
+
 <style scoped>
 .loading {
   border: 4px solid rgba(0, 0, 0, 0.1);
