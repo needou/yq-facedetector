@@ -1,12 +1,14 @@
 // src/index.js
-import YqVideo from '@/lib/yq-video';
 
-const components = [YqVideo];
+import YqVerify from './yq-verify';
+import BaiduVerify from './baidu-verify';
 
-const install = (Vue,options) => {
+const components = [YqVerify,BaiduVerify];
+
+const install = (Vue) => {
     if (install.installed) return;
     install.installed = true
-    console.log(options)
+
     components.forEach(component => {
         Vue.component(component.name, component)
     })

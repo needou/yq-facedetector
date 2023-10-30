@@ -1,15 +1,19 @@
 <template>
   <div id="app">
     <Example/>
+    <hr>
+    <BaiduExample />
   </div>
 </template>
 
 <script>
 import Example from './components/Example.vue'
+import BaiduExample from "@/components/BaiduExample";
 
 export default {
   name: 'App',
   components: {
+    BaiduExample,
     Example
   }
 }

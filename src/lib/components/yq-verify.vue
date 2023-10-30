@@ -1,12 +1,16 @@
 <!-- CameraCapture.vue -->
 <template>
-  <div :style="{width:width+'px',height:height+'px'}" style="position: relative;overflow: hidden;transform: scale(1);background-color:#d0d0d0;">
+  <div
+      :style="{width:width+'px',height:height+'px'}"
+      style="position: relative;overflow: hidden;transform: scale(1);background-color:#d0d0d0;"
+  >
     <!--video-->
     <video
         ref="videoElement"
         :width="width"
         :height="height"
         autoplay
+        style="object-fit: fill;"
         @play="play"
     >
 
@@ -20,17 +24,15 @@
 
     </canvas>
 
-    <div v-if="loading" class="loading">
-
-    </div>
-
   </div>
 </template>
 
 <script>
-
+/**
+ * yq本地人脸识别
+ */
 export default {
-  name:'yq-video',
+  name:'yq-verify',
   props: {
     host:{
       type:String,
@@ -60,7 +62,6 @@ export default {
   data() {
     return {
       deviceList:[],
-      loading:false,
       isRun: false,//是否运行
       socket: null,
       connected: false,
@@ -80,33 +81,6 @@ export default {
     this.connectWebSocket()
   },
   methods: {
-    /**
-     * 获取video列表
-     */
-    initVideo(){
-      // 检查浏览器是否支持媒体设备API
-      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        //获取摄像头列表
-        navigator.mediaDevices.enumerateDevices()
-            .then((devices)=> {
-              console.log(devices)
-              let videoArr=[]
-              devices.forEach((device)=> {
-                if(device.kind == 'videoinput'){
-                  videoArr.push({
-                    'label': device.label,
-                    'id': device.deviceId
-                  })
-                }
-              })
-              this.deviceList = videoArr
-            })
-            .catch((err)=> {
-              console.log(err)
-            })
-
-      }
-    },
     /**
      * 打开摄像头
      * @param deviceId
@@ -168,13 +142,6 @@ export default {
             this.$emit('error',msg.code,msg.message)
           }
           this.isCheck = false
-        }
-        if(msg.func=='buildRecognizer'){
-          this.loading = false
-          if(msg.code!=0){
-            //返回错误
-            this.$emit('error',msg.code,msg.message)
-          }
         }
       }
 
@@ -348,13 +315,6 @@ export default {
       return imageData
     },
     /**
-     * 刷新特征库
-     */
-    refreshDb(){
-      this.loading = true
-      this.sendMessage({},'buildRecognizer')
-    },
-    /**
      * 释放
      */
     dispose(){
@@ -372,25 +332,3 @@ export default {
 }
 
 </script>
-
-<style scoped>
-.loading {
-  border: 4px solid rgba(0, 0, 0, 0.1);
-  border-top: 4px solid #ffffff;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  animation: spin 2s linear infinite;
-  margin: 20px auto;
-  position: absolute;
-  z-index: 200;
-  left: 50%;
-  top: 50%;
-  margin: -20px 0 0 -20px;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-</style>
