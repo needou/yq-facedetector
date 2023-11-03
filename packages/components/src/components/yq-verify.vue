@@ -1,4 +1,3 @@
-<!-- CameraCapture.vue -->
 <template>
   <div
       :style="{width:width+'px',height:height+'px'}"
