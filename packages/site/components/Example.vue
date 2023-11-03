@@ -1,6 +1,6 @@
 <template>
   <div class="box">
-    <h2>百度人脸识别</h2>
+<!--    <h2>本地人脸识别</h2>-->
     <div style="position: absolute;z-index: 200;left: 0;right: 0">
       <select v-model="device">
         <option :value="device.id" v-for="device in deviceList">{{device.label}}</option>
@@ -12,7 +12,7 @@
       <button @click="reload">重载</button>
     </div>
     <div style="width:640px;height: 480px;transform: scale(1); ">
-      <baidu-verify
+      <yq-verify
           ref="yqVideo"
           :width="480"
           :height="480"
@@ -48,7 +48,7 @@ import Vue from "vue";
 Vue.use(YqFacedetector);
 
 export default {
-  name: 'BaiduExample',
+  name: 'Example',
   data(){
     return {
       device:'',

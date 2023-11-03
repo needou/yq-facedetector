@@ -53,10 +53,6 @@ export default {
     return {
       deviceList:[],
       isRun: false,//是否运行
-      isCapture:false,//是否抓取种
-      isCheck:false, //是否识别中
-      findFace:false, //是否找到人脸
-      face:[] //人脸数据
     };
   },
   mounted() {
@@ -92,7 +88,6 @@ export default {
       //人脸识别定时器
       window.FACE_COMPAR_TIMER =  setInterval(()=>{
           this.capture()
-          this.isCheck = true
       },1000)
 
     },
@@ -101,6 +96,11 @@ export default {
      */
     stop(){
       window.clearInterval(window.FACE_COMPAR_TIMER)
+      const videoElement = this.$refs.videoElement
+      if(videoElement){
+        videoElement.pause()
+      }
+
     },
     /**
      * 抓取帧
@@ -119,12 +119,10 @@ export default {
       context.drawImage(videoElement, 0, 0, canvas.width, canvas.height)
 
       // 获取图像二进制数据
-      const imageData = canvas.toDataURL('image/jpeg',0.8).split(',')[1]
+      //const imageData = canvas.toDataURL('image/jpeg',0.8).split(',')[1]
+      const imageData = canvas.toDataURL('image/jpeg',0.8)
 
-      let params = {
-        imageData:imageData
-      }
-      this.sendMessage(params,'faceFind')
+      this.$emit('capture',imageData)
 
     },
     /**

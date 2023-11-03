@@ -48,7 +48,7 @@ export default {
     },
     detectorScore:{
       type: Number,
-      default: 0.6
+      default: 0.3
     },
     autoStart:{
       type: Boolean,
@@ -198,6 +198,10 @@ export default {
       canvas.clearRect(0, 0, canvasElement.width, canvasElement.height)
       // 绘制视频帧
       canvas.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height)
+
+      const imageData = canvas.toDataURL('image/jpeg',0.8)
+      this.$emit('frame',imageData)
+
       // 在标注状态下绘制标注
       if (this.isRun) {
         //console.log('ok==========',this.face)
@@ -258,6 +262,11 @@ export default {
       this.clearAnnotation()
       window.clearInterval(window.FACE_FIND_TIMER)
       window.clearInterval(window.FACE_COMPAR_TIMER)
+
+      const videoElement = this.$refs.videoElement
+      if(videoElement){
+        videoElement.pause()
+      }
     },
     /**
      * 抓取帧

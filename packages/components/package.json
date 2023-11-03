@@ -1,0 +1,32 @@
+{
+  "name": "yq-facedetector",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "facedetector",
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "vite build",
+    "test": "vitest",
+    "coverage": "vitest run --coverage",
+    "report": "vitest --ui"
+  },
+  "keywords": [
+    "yq-facedetector"
+  ],
+  "author": "Starter",
+  "license": "ISC",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "dependencies": {
+    "@vitejs/plugin-vue": "^4.4.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^3.0.1",
+    "vite-plugin-vue2": "^2.0.2"
+  },
+  "peerDependencies": {
+    "vue": "2.7.10"
+  }
+}

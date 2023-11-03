@@ -1,17 +1,17 @@
 {
-  "name": "yq-facedetector",
-  "version": "0.1.5",
   "private": false,
-  "main": "dist/YqFacedetectorLib.umd.js",
   "scripts": {
     "dev": "set NODE_OPTIONS=--openssl-legacy-provider && vue-cli-service serve",
     "start": "vue-cli-service build --target lib --name YqFacedetectorLib --dest dist src/lib/index.js --watch",
-    "build": "vue-cli-service build --target lib --name YqFacedetectorLib --dest dist src/lib/index.js",
+    "build": "set NODE_OPTIONS=--openssl-legacy-provider && vue-cli-service build --target lib",
+    "build:old": "set NODE_OPTIONS=--openssl-legacy-provider && vue-cli-service build --target lib --name YqFacedetectorLib --dest dist src/lib/index.js",
     "build:app": "vue-cli-service build",
     "lint": "vue-cli-service lint"
   },
+  "license": "ISC",
   "dependencies": {
     "core-js": "^3.6.5",
+    "area-data": "^5.0.6",
     "vue": "^2.6.11"
   },
   "devDependencies": {
