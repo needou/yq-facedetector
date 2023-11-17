@@ -22,7 +22,8 @@
   "dependencies": {
     "@vitejs/plugin-vue": "^4.4.0",
     "dayjs": "^1.11.0",
-    "axios": "^0.26.1"
+    "axios": "^0.26.1",
+    "vue": "3.2.30"
   },
   "devDependencies": {
     "@vitejs/plugin-vue-jsx": "^3.0.2",

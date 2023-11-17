@@ -19,8 +19,9 @@
 
 <script setup>
 import {compressImage} from "../util/util"
-import {ref,computed,onMounted,onBeforeUnmount} from 'vue'
 import RequestUtil from "../util/request-util"
+import {ref,computed,onMounted,onBeforeUnmount} from 'vue'
+
 
 const emits = defineEmits(['complete'])
 
@@ -55,7 +56,9 @@ const props = defineProps({
 const videoElementRef = ref()
 
 const videoAspectRatio=ref(1.333)//摄像头比例
-const isPaused=ref(true)
+const isStop=ref(true)
+
+const captureState=ref(true) //抓拍枚举
 
 //计算是视频宽度
 const getVideoWidth = computed(()=>{
@@ -70,10 +73,6 @@ const getVideoHeight = computed(()=>{
 
   return props.height
 })
-
-
-
-
 
 /**
  * 打开摄像头
@@ -107,7 +106,7 @@ const openDevice = (deviceId)=>{
  * 启动
  */
 const start = ()=>{
-  isPaused.value = false
+  isStop.value = false
   const videoElement = videoElementRef.value
   if(videoElement){
     videoElement.play()
@@ -118,7 +117,7 @@ const start = ()=>{
  * 停止
  */
 const stop = ()=> {
-  isPaused.value = true
+  isStop.value = true
   //暂停摄像头
   const videoElement = videoElementRef.value
   if (videoElement) {
@@ -148,35 +147,39 @@ const capture = async ()=> {
   let newData = await compressImage(imageData, canvas.width, canvas.height,400, 400)
 
   const newDataCompose = newData.split(',')[1]
-  comparison(newDataCompose)
+  //后台线程处理
+  if(captureState.value) {
+    comparison(newDataCompose)
+  }
 
 }
 
-
-
 //人脸比对
-const comparison = (newData)=>{
+const comparison = async (newData) => {
+  captureState.value = false
   let params = {
     imageData: newData,
     enableAnti: false, //是否活体检测
-    detectorScore: this.detectorScore //特征值筛选
+    detectorScore: props.detectorScore //特征值筛选
   }
   //发送数据
-  RequestUtil.post(this.host+'/featureComparison',params).then((msg)=>{
-    if(msg.code==0){
+  RequestUtil.post(props.host + '/featureComparison', params).then((msg)=>{
+
+    if (msg.code == 0) {
       const data = msg.data
-      console.log('识别结果',data)
-      if(data){
-        //反馈结果
+      console.log('识别结果', data)
+      if (data) {
         showResult(data.detector,data.anti)
       }
-    }else{
+    } else {
       //返回错误
-      console.log('error',msg.code,msg.message)
+      console.log('error', msg.code, msg.message)
     }
+    captureState.value = true
   })
-}
 
+
+}
 /**
  * 识别结果
  * @param detector
@@ -224,7 +227,7 @@ onMounted(()=>{
   }
   //人脸查找定时器
   window.FACE_FIND_TIMER =  setInterval(()=>{
-    if(!isPaused.value) {
+    if(!isStop.value) {
       capture()
     }
   },10)
@@ -234,39 +237,23 @@ onBeforeUnmount(() => {
   dispose()
 })
 
+defineExpose({
+  start,
+  stop
+})
 </script>
-<style lang="less" scoped>
+<style scoped>
 .video-wrap{
   position: relative;
   overflow: hidden;
-  //transform: scale(1);
   display: flex;
   flex-direction: row;
-  .video-info{
-    border-radius: 5px;
-    background-color: #2c3e50;
-    overflow: hidden;
-    position: relative;
-  }
-  .text-info{
-    padding:0;
-    position: relative;
-    width: 100%;
-    flex: 1;
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    .info-item{
-      font-size: 20px;
-      color: #fff;
-    }
-    .state{
-      margin: 0;
-      padding: 0;
-    }
-  }
 }
-
+.video-info{
+  border-radius: 5px;
+  background-color: #2c3e50;
+  overflow: hidden;
+  position: relative;
+}
 
 </style>

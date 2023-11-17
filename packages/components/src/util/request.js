@@ -34,7 +34,7 @@ service.interceptors.request.use(
 service.interceptors.response.use(
   res => {
     // 处理响应错误，请求异常自动提示错误信息，如果是B0301就跳转到登录界面
-    return processErrorResponse(res)
+    return res.data
   },
   error => {
     // 处理响应错误

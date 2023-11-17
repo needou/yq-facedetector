@@ -37,9 +37,7 @@ export default defineConfig({
   plugins: [vue(),  vueJsx()],
   css: {
     preprocessorOptions: {
-      less: {
-        javascriptEnabled: true,
-      },
+
     }
   }
-});
+})

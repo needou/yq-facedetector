@@ -18,7 +18,7 @@ export default class RequestUtil {
       params = {}
     }
     let result = await request.get(url, {params})
-    return result.data
+    return result
   }
 
   /**
@@ -42,8 +42,7 @@ export default class RequestUtil {
     if (params === undefined) {
       params = {}
     }
-    let result = await request.post(url, params)
-    return result.data
+    return request.post(url, params)
   }
 
   /**
