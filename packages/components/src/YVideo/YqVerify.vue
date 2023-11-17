@@ -130,28 +130,28 @@ const stop = ()=> {
  * 抓取帧
  */
 const capture = async ()=> {
-  const videoElement = videoElementRef.value
-  const canvas = document.createElement('canvas')
-  const context = canvas.getContext('2d')
+  if(captureState.value===true) {
+    console.log('抓拍')
+    const videoElement = videoElementRef.value
+    const canvas = document.createElement('canvas')
+    const context = canvas.getContext('2d')
 
-  // 设置canvas的宽高与视频元素相同
-  canvas.width = getVideoWidth.value
-  canvas.height = getVideoHeight.value
-  // 在canvas上绘制当前视频帧
-  context.drawImage(videoElement, 0, 0, canvas.width, canvas.height)
+    // 设置canvas的宽高与视频元素相同
+    canvas.width = getVideoWidth.value
+    canvas.height = getVideoHeight.value
+    // 在canvas上绘制当前视频帧
+    context.drawImage(videoElement, 0, 0, canvas.width, canvas.height)
 
-  // 获取图像二进制数据
-  //const imageData = canvas.toDataURL('image/jpeg',0.8).split(',')[1]
-  const imageData = canvas.toDataURL('image/jpeg', 0.8)
-  //压缩图像
-  let newData = await compressImage(imageData, canvas.width, canvas.height,400, 400)
+    // 获取图像二进制数据
+    //const imageData = canvas.toDataURL('image/jpeg',0.8).split(',')[1]
+    const imageData = canvas.toDataURL('image/jpeg', 0.8)
+    //压缩图像
+    let newData = await compressImage(imageData, canvas.width, canvas.height, 400, 400)
 
-  const newDataCompose = newData.split(',')[1]
-  //后台线程处理
-  if(captureState.value) {
+    const newDataCompose = newData.split(',')[1]
+    //后台线程处理
     comparison(newDataCompose)
   }
-
 }
 
 //人脸比对
@@ -175,6 +175,8 @@ const comparison = async (newData) => {
       //返回错误
       console.log('error', msg.code, msg.message)
     }
+
+  }).finally(()=>{
     captureState.value = true
   })
 
@@ -227,10 +229,10 @@ onMounted(()=>{
   }
   //人脸查找定时器
   window.FACE_FIND_TIMER =  setInterval(()=>{
-    if(!isStop.value) {
-      capture()
+    if(isStop.value===false) {
+        capture()
     }
-  },10)
+  },100)//不能低于100毫秒，不然要失控
 })
 
 onBeforeUnmount(() => {
