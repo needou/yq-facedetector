@@ -1,19 +1,22 @@
 import {defineConfig} from "vite";
 import vue from "@vitejs/plugin-vue";
 import vueJsx from "@vitejs/plugin-vue-jsx";
+import {resolve} from "path";
 
 export default defineConfig({
   build: {
     emptyOutDir: true,
     lib: {
-      entry: 'src/index.js',
+      entry: {
+        index: resolve(__dirname, "./src/index.js"),
+      },
       // ["es", "cjs", "umd"]
       formats: ["es"],
       name: 'YqFacedetector'
     },
     rollupOptions: {
       // 确保外部化处理那些你不想打包进库的依赖
-      external: ["vue", "ant-design-vue"],
+      external: ["vue"],
       output: {
         chunkFileNames: "common/[name].js",
         entryFileNames: (file) => {
@@ -37,6 +40,6 @@ export default defineConfig({
       less: {
         javascriptEnabled: true,
       },
-    },
+    }
   }
 });

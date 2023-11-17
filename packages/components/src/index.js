@@ -1,8 +1,8 @@
-import Component from "./components";
-import Util from "./util";
+//导出组件
+import YVideo from './YVideo'
 
 const allComponents={
-    ...Component
+    ...YVideo
 }
 
 export default {
@@ -13,4 +13,6 @@ export default {
     }
 }
 
-export{Component,Util}
+export {
+    YVideo
+}

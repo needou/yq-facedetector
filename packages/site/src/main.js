@@ -1,8 +1,9 @@
-import Vue from 'vue'
+import './assets/main.css'
+
+import { createApp } from 'vue'
 import App from './App.vue'
+import YqFacedetector from '../../components/src';
 
-Vue.config.productionTip = false
-
-new Vue({
-  render: h => h(App),
-}).$mount('#app')
+createApp(App)
+    .use(YqFacedetector)
+    .mount('#app')
